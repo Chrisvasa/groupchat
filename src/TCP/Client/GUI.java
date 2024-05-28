@@ -1,7 +1,6 @@
 package TCP.Client;
 
 import util.User;
-import util.UserList;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,7 +8,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.ArrayList;
 
 public class GUI extends JFrame {
 	private String userName;
@@ -123,17 +122,23 @@ public class GUI extends JFrame {
 		});
 	}
 
-	public void updateUserList(UserList users) {
-		System.out.println("----------PRINTING USER LIST----------");
-		System.out.println(users.getUsers().size());
-//		SwingUtilities.invokeLater(() -> {
-			listModel.clear();
-			List<User> newUsers = users.getUsers();
-			System.out.println(newUsers.size());
-			for (User user : newUsers) {
+	public void updateUserList(ArrayList<User> users) {
+		SwingUtilities.invokeLater(() -> {
+			listModel.removeAllElements();
+			for(User user : users) {
+				listModel.addElement(user.toString());
+			}
+		});
+	}
+
+	public void addUser(User user) {
+		SwingUtilities.invokeLater(() -> {
+			if (user.getUsername().isEmpty()) {
+				listModel.clear();
+			} else {
 				listModel.addElement(user.getUsername());
 			}
-//		});
+		});
 	}
 
 	public String getUserName() {

@@ -2,10 +2,10 @@ package TCP.Client;
 
 import util.Message;
 import util.User;
-import util.UserList;
 
 import java.io.*;
 import java.net.*;
+import java.util.List;
 
 public class Client {
 	private Socket socket;
@@ -45,9 +45,10 @@ public class Client {
 					Object obj = objInput.readObject();
 					switch (obj) {
 						case Message message -> gui.addMessage(message.getMessage());
-						case UserList userList -> gui.updateUserList(userList);
+//						case UserList userList -> gui.updateUserList(userList);
+						case User newUser -> gui.addUser(newUser);
 						case String string -> gui.addMessage(string);
-						case null, default -> System.out.println("Uknown Message Type");
+						case null, default -> System.out.println("Unknown Message Type");
 					}
 				} catch (IOException | ClassNotFoundException e) {
 					close();

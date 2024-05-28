@@ -2,7 +2,6 @@ package TCP.Server;
 
 import util.Message;
 import util.User;
-import util.UserList;
 
 import java.io.*;
 import java.net.Socket;
@@ -14,7 +13,7 @@ public class ClientHandler implements Runnable {
 	to the server.
 	 */
 	public static final ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
-	public static final UserList users = new UserList();
+	public static final ArrayList<User> users = new ArrayList<User>();
 	private Socket socket;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
@@ -25,9 +24,7 @@ public class ClientHandler implements Runnable {
 			output = new ObjectOutputStream(socket.getOutputStream());
 			input = new ObjectInputStream(socket.getInputStream());
 			this.socket = socket;
-			synchronized (clients) {
-				clients.add(this);
-			}
+			clients.add(this);
 		} catch (Exception e) {
 			close();
 		}
@@ -73,9 +70,7 @@ public class ClientHandler implements Runnable {
 
 	private void registerNewClient(User newUser) {
 		this.user = newUser;
-		synchronized (users) {
-			users.addUser(newUser);
-		}
+		users.add(newUser);
 		Message joinMessage = new Message(
 				user.getUsername(),
 				"SERVER: " + user.getUsername() + " joined the server.");
@@ -94,18 +89,20 @@ public class ClientHandler implements Runnable {
 	}
 
 	private void sendListToClients() {
-		synchronized (clients) {
 			for(ClientHandler client : clients) {
 				try {
-					System.out.println("Size of list for : " + client.user.getUsername() + " is " + ClientHandler.users.getUsers().size());
-					client.output.writeObject(ClientHandler.users);
-					client.output.flush();
+					if(users.size() > 1) {
+						users.addFirst(new User());
+					}
+					for(var user : users) {
+						client.output.writeObject(user);
+						client.output.flush();
+					}
 				} catch (IOException e) {
 					close();
 					throw new RuntimeException(e);
 				}
 			}
-		}
 	}
 
 	private void sendMessageToClients(Message message) {
@@ -125,24 +122,19 @@ public class ClientHandler implements Runnable {
 
 	public void close() {
 		System.out.println("Client has disconnected");
-		Message leaveMessage = new Message(user.getUsername(),
-				"SERVER: " + user.getUsername() + " left the server.");
-		sendMessageToClients(leaveMessage);
-		clients.remove(this);
-		synchronized (users) {
-			users.removeUser(user);
+		if (user != null) {
+			Message leaveMessage = new Message(user.getUsername(),
+					"SERVER: " + user.getUsername() + " left the server.");
+			sendMessageToClients(leaveMessage);
+			users.remove(user);
 		}
+		clients.remove(this);
+		sendListToClients();
 
 		try {
-			if(socket != null) {
-				socket.close();
-			}
-			if(output != null) {
-				output.close();
-			}
-			if(input != null) {
-				input.close();
-			}
+			if (socket != null) socket.close();
+			if (output != null) output.close();
+			if (input != null) input.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
