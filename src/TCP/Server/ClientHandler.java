@@ -32,7 +32,7 @@ public class ClientHandler implements Runnable {
 
 	@Override
 	public void run() {
-		while(socket.isConnected()) {
+		while (socket.isConnected()) {
 			try {
 				listenForMessages();
 			} catch (Exception e) {
@@ -89,26 +89,26 @@ public class ClientHandler implements Runnable {
 	}
 
 	private void sendListToClients() {
-			for(ClientHandler client : clients) {
-				try {
-					if(users.size() > 1) {
-						users.addFirst(new User());
-					}
-					for(var user : users) {
-						client.output.writeObject(user);
-						client.output.flush();
-					}
-				} catch (IOException e) {
-					close();
-					throw new RuntimeException(e);
+		for (ClientHandler client : clients) {
+			try {
+				if (users.size() > 1) {
+					users.addFirst(new User());
 				}
+				for (var user : users) {
+					client.output.writeObject(user);
+					client.output.flush();
+				}
+			} catch (IOException e) {
+				close();
+				throw new RuntimeException(e);
 			}
+		}
 	}
 
 	private void sendMessageToClients(Message message) {
-		for(ClientHandler client : clients) {
+		for (ClientHandler client : clients) {
 			String currentUsername = client.user.getUsername();
-			if(!currentUsername.equals(message.getSender())) {
+			if (!currentUsername.equals(message.getSender())) {
 				try {
 					client.output.writeObject(message);
 					client.output.flush();
