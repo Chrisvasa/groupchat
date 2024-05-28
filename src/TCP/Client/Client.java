@@ -2,27 +2,26 @@ package TCP.Client;
 
 import util.Message;
 import util.User;
+import util.UserList;
 
 import java.io.*;
 import java.net.*;
 
 public class Client {
 	private Socket socket;
-	private InetAddress inetAddress;
+//	private static final String IP = "127.0.0.1";
 	private final int PORT = 1337;
 	private String userName;
-	private Thread listener;
-	private ObjectInputStream ois;
-	private ObjectOutputStream oos;
-	private User user = new User();
+	private ObjectInputStream objInput;
+	private ObjectOutputStream objOutput;
+	private final User user = new User();
 	private GUI gui;
 
 	public Client(InetAddress inetAddress) {
 		try {
-			this.inetAddress = inetAddress;
 			this.socket = new Socket(inetAddress, PORT);
-			this.oos = new ObjectOutputStream(socket.getOutputStream());
-			this.ois = new ObjectInputStream(socket.getInputStream());
+			this.objOutput = new ObjectOutputStream(socket.getOutputStream());
+			this.objInput = new ObjectInputStream(socket.getInputStream());
 			this.gui = new GUI(this);
 			setUserName(gui.getUserName());
 			user.setUsername(this.userName);
@@ -40,36 +39,31 @@ public class Client {
 	}
 
 	public void listenForMessages() {
-			listener = new Thread(() -> {
-				while (!Thread.interrupted()) {
-					try {
-						Object obj = ois.readObject();
-						if(obj instanceof Message m) {
-							gui.addMessage(m.getMessage());
-						}
-						else {
-							System.out.println("MESSAGE WTF");
-						}
-					} catch (EOFException e) {
-						e.printStackTrace();
-						close();
-						break;
-					} catch (IOException | ClassNotFoundException e) {
-						close();
-						e.printStackTrace();
+		new Thread(() -> {
+			while (!Thread.interrupted()) {
+				try {
+					Object obj = objInput.readObject();
+					switch (obj) {
+						case Message message -> gui.addMessage(message.getMessage());
+						case UserList userList -> gui.updateUserList(userList);
+						case String string -> gui.addMessage(string);
+						case null, default -> System.out.println("Uknown Message Type");
 					}
+				} catch (IOException | ClassNotFoundException e) {
+					close();
+					e.printStackTrace();
 				}
-				close();
-			});
-			listener.start();
+			}
+			close();
+		}).start();
 	}
 
 	public void sendMessage(String message) {
 		if(message != null) {
 			try {
 				Message messageToSend = new Message(userName, message);
-				oos.writeObject(messageToSend);
-				oos.flush();
+				objOutput.writeObject(messageToSend);
+				objOutput.flush();
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -77,13 +71,11 @@ public class Client {
 	}
 
 	public void sendUserInfo() {
-		if(user != null) {
-			try {
-				oos.writeObject(user);
-				oos.flush();
-			} catch (IOException e) {
-				throw new RuntimeException(e);
-			}
+		try {
+			objOutput.writeObject(user);
+			objOutput.flush();
+		} catch (IOException e) {
+			throw new RuntimeException(e);
 		}
 	}
 
@@ -92,11 +84,11 @@ public class Client {
 			if (socket != null) {
 				socket.close();
 			}
-			if (oos != null) {
-				oos.close();
+			if (objOutput != null) {
+				objOutput.close();
 			}
-			if (ois != null) {
-				ois.close();
+			if (objInput != null) {
+				objInput.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -106,6 +98,7 @@ public class Client {
 	public static void main(String[] args) {
 		try {
 			InetAddress inetAddress = InetAddress.getLocalHost();
+//			InetAddress inetAddress = InetAddress.getByName(IP);
 			Client client = new Client(inetAddress);
 			client.listenForMessages();
 		} catch (IOException e) {

@@ -1,12 +1,14 @@
 package TCP.Client;
 
+import util.User;
+import util.UserList;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 
 public class GUI extends JFrame {
@@ -15,7 +17,7 @@ public class GUI extends JFrame {
 	private JTextField messageField;
 	private JButton sendButton;
 	private JButton logoutButton;
-	DefaultListModel<String> model = new DefaultListModel<>();
+	DefaultListModel<String> listModel = new DefaultListModel<>();
 	JList<String> userList;
 	Client client;
 
@@ -61,19 +63,11 @@ public class GUI extends JFrame {
 		JPanel userPanel = new JPanel();
 		JLabel userLabel = new JLabel("Users online:");
 		userPanel.setLayout(new BorderLayout());
-		userList = new JList<>(model);
+		userList = new JList<>(listModel);
 		userList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-//		userList.addListSelectionListener(new ListSelectionListener() {
-//
-//			@Override
-//			public void valueChanged(ListSelectionEvent e) {
-//
-//			}
-//		});
 		JScrollPane userScrollPane = new JScrollPane(userList);
 		userScrollPane.setPreferredSize(new Dimension(100, 0));
-		userPanel.add(userList, BorderLayout.CENTER);
-		userPanel.add(userScrollPane, BorderLayout.EAST);
+		userPanel.add(userScrollPane, BorderLayout.CENTER);
 		userPanel.add(userLabel, BorderLayout.NORTH);
 
 		add(logoutPanel, BorderLayout.NORTH);
@@ -115,13 +109,6 @@ public class GUI extends JFrame {
 		});
 	}
 
-	private void closeWindow() {
-		SwingUtilities.invokeLater(() -> {
-			dispose();
-			System.exit(0);
-		});
-	}
-
 	public void addMessage(String message) {
 		SwingUtilities.invokeLater(() -> {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -136,27 +123,27 @@ public class GUI extends JFrame {
 		});
 	}
 
-	public void addUser(String userName) {
-		model.addElement(userName);
-	}
-
-	public void removeUser(String userName) {
-		SwingUtilities.invokeLater(() -> {
-			model.removeElement(userName);
-		});
-	}
-
-	public void updateUserList(String users) {
-		List<String> newUsers = Arrays.asList(users.split(","));
-		SwingUtilities.invokeLater(() -> {
-			if (newUsers.size() >= model.getSize()) {
-				model.clear();
-				newUsers.forEach(model::addElement);
+	public void updateUserList(UserList users) {
+		System.out.println("----------PRINTING USER LIST----------");
+		System.out.println(users.getUsers().size());
+//		SwingUtilities.invokeLater(() -> {
+			listModel.clear();
+			List<User> newUsers = users.getUsers();
+			System.out.println(newUsers.size());
+			for (User user : newUsers) {
+				listModel.addElement(user.getUsername());
 			}
-		});
+//		});
 	}
 
 	public String getUserName() {
 		return userName;
+	}
+
+	private void closeWindow() {
+		SwingUtilities.invokeLater(() -> {
+			dispose();
+			System.exit(0);
+		});
 	}
 }

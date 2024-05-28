@@ -2,6 +2,7 @@ package TCP.Server;
 
 import util.Message;
 import util.User;
+import util.UserList;
 
 import java.io.*;
 import java.net.Socket;
@@ -12,11 +13,12 @@ public class ClientHandler implements Runnable {
 	Holds all clients in a static list, which allows us to message all the different clients that are connected
 	to the server.
 	 */
-	public static ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
+	public static final ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
+	public static final UserList users = new UserList();
 	private Socket socket;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
-	private String userName;
+	private User user;
 
 	public ClientHandler(Socket socket) {
 		try {
@@ -28,7 +30,6 @@ public class ClientHandler implements Runnable {
 			}
 		} catch (Exception e) {
 			close();
-			System.out.println("Client disconnected");
 		}
 	}
 
@@ -38,7 +39,6 @@ public class ClientHandler implements Runnable {
 			try {
 				listenForMessages();
 			} catch (Exception e) {
-				System.out.println("Client disconnected");
 				close();
 				break;
 			}
@@ -46,28 +46,72 @@ public class ClientHandler implements Runnable {
 	}
 
 	private void listenForMessages() throws IOException, ClassNotFoundException {
-		Object obj;
+		Object receivedObject;
 
-		while ((obj = (Object) input.readObject()) != null) {
-			if(obj instanceof User u) {
-				this.userName = u.getUsername();
-				Message joinMessage = new Message(userName, "SERVER: " + userName + " joined the server.");
-				sendMessageToClients(joinMessage);
+		while ((receivedObject = (Object) input.readObject()) != null) {
+			processIncomingData(receivedObject);
+		}
+	}
+
+	private void processIncomingData(Object receivedObject) {
+		switch (receivedObject) {
+			case User newUser -> registerNewClient(newUser);
+			case Message message -> processIncomingMessage(message);
+			case String message -> {
+				Message newMessage = new Message("Unknown Sender", message);
+				sendMessageToClients(newMessage);
 			}
-			else if(obj instanceof Message message) {
-				System.out.println("Message from " + message.getSender() + ": " + message.getMessage());
-				message.setMessage(message.getSender() + ": " + message.getMessage());
-				sendMessageToClients(message);
-			}
-			else {
-				System.out.println("Unknown message type received.");
+			case null, default -> System.out.println("Unknown message type received.");
+		}
+	}
+
+	private void processIncomingMessage(Message message) {
+		System.out.println("Message from " + message.getSender() + ": " + message.getMessage());
+		message.setMessage(message.getSender() + ": " + message.getMessage());
+		sendMessageToClients(message);
+	}
+
+	private void registerNewClient(User newUser) {
+		this.user = newUser;
+		synchronized (users) {
+			users.addUser(newUser);
+		}
+		Message joinMessage = new Message(
+				user.getUsername(),
+				"SERVER: " + user.getUsername() + " joined the server.");
+		sendMessageToClients(joinMessage);
+		sendMessageOnJoin();
+		sendListToClients();
+	}
+
+	private void sendMessageOnJoin() {
+		try {
+			Message joinMessage = new Message("SERVER: ", "You have connected to the server.");
+			this.output.writeObject(joinMessage);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void sendListToClients() {
+		synchronized (clients) {
+			for(ClientHandler client : clients) {
+				try {
+					System.out.println("Size of list for : " + client.user.getUsername() + " is " + ClientHandler.users.getUsers().size());
+					client.output.writeObject(ClientHandler.users);
+					client.output.flush();
+				} catch (IOException e) {
+					close();
+					throw new RuntimeException(e);
+				}
 			}
 		}
 	}
 
 	private void sendMessageToClients(Message message) {
 		for(ClientHandler client : clients) {
-			if(!client.userName.equals(message.getSender())) {
+			String currentUsername = client.user.getUsername();
+			if(!currentUsername.equals(message.getSender())) {
 				try {
 					client.output.writeObject(message);
 					client.output.flush();
@@ -80,9 +124,15 @@ public class ClientHandler implements Runnable {
 	}
 
 	public void close() {
-		Message leaveMessage = new Message(userName, "SERVER: " + userName + " left the server.");
+		System.out.println("Client has disconnected");
+		Message leaveMessage = new Message(user.getUsername(),
+				"SERVER: " + user.getUsername() + " left the server.");
 		sendMessageToClients(leaveMessage);
 		clients.remove(this);
+		synchronized (users) {
+			users.removeUser(user);
+		}
+
 		try {
 			if(socket != null) {
 				socket.close();

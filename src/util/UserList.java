@@ -1,6 +1,7 @@
 package util;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserList implements Serializable {
@@ -8,6 +9,10 @@ public class UserList implements Serializable {
 
 	public UserList(List<User> users) {
 		this.users = users;
+	}
+
+	public UserList() {
+		this.users = new ArrayList<User>();
 	}
 
 	public List<User> getUsers() {
