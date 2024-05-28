@@ -5,11 +5,10 @@ import util.User;
 
 import java.io.*;
 import java.net.*;
-import java.util.List;
 
 public class Client {
 	private Socket socket;
-//	private static final String IP = "127.0.0.1";
+	//	private static final String IP = "127.0.0.1";
 	private final int PORT = 1337;
 	private String userName;
 	private ObjectInputStream objInput;
@@ -60,7 +59,7 @@ public class Client {
 	}
 
 	public void sendMessage(String message) {
-		if(message != null) {
+		if (message != null) {
 			try {
 				Message messageToSend = new Message(userName, message);
 				objOutput.writeObject(messageToSend);

@@ -6,7 +6,7 @@ import java.net.Socket;
 
 public class Server {
 	private static final int PORT = 1337;
-//	private static final String IP = "127.0.0.1";
+	//	private static final String IP = "127.0.0.1";
 	ServerSocket serverSocket;
 
 	public Server(ServerSocket serverSocket) {
@@ -33,7 +33,7 @@ public class Server {
 	public void stop() {
 		System.out.println("-- SERVER SHUTDOWN --");
 		try {
-			if(serverSocket != null) {
+			if (serverSocket != null) {
 				serverSocket.close();
 			}
 		} catch (IOException e) {

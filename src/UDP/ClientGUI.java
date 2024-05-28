@@ -91,7 +91,7 @@ public class ClientGUI extends JFrame {
 
 	public List<String> getUserList() {
 		List<String> users = new ArrayList<>();
-		for(int i = 0; i < model.getSize(); i++) {
+		for (int i = 0; i < model.getSize(); i++) {
 			users.add(model.getElementAt(i));
 		}
 		return users;

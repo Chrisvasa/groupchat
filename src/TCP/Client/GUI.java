@@ -125,7 +125,7 @@ public class GUI extends JFrame {
 	public void updateUserList(ArrayList<User> users) {
 		SwingUtilities.invokeLater(() -> {
 			listModel.removeAllElements();
-			for(User user : users) {
+			for (User user : users) {
 				listModel.addElement(user.toString());
 			}
 		});

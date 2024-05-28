@@ -37,7 +37,7 @@ public class NetworkManager {
 
 	public void sendMessage(String message) {
 		try {
-			if(!socket.isClosed()) {
+			if (!socket.isClosed()) {
 				DatagramPacket packet = new DatagramPacket(message.getBytes(), message.length(), inetAddress, PORT);
 				socket.send(packet);
 			}
@@ -60,7 +60,8 @@ public class NetworkManager {
 				} catch (SocketException e) {
 					if (socket.isClosed()) {
 						System.out.println("Socket was closed successfully.");
-					};
+					}
+					;
 					break;
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -112,7 +113,7 @@ public class NetworkManager {
 				socket.leaveGroup(group, netIf);
 				socket.close();
 			}
-		} catch (IOException e ) {
+		} catch (IOException e) {
 			e.printStackTrace();
 			if (socket != null && !socket.isClosed()) {
 				socket.close();
