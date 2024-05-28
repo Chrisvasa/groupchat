@@ -2,6 +2,8 @@ package UDP;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,6 +53,14 @@ public class ClientGUI extends JFrame {
 		// Bottom panel - INPUT / SEND button
 		JPanel inputPanel = new JPanel(new BorderLayout());
 		messageField = new JTextField();
+		messageField.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				networkManager.sendMessage(userName + ":" + messageField.getText());
+				clearMessageField();
+			}
+		});
 		sendButton = new JButton("Send");
 		sendButton.addActionListener(e -> {
 			networkManager.sendMessage(userName + ":" + messageField.getText());
