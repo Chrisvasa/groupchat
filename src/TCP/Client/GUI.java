@@ -1,6 +1,7 @@
 package TCP.Client;
 
 import util.User;
+import util.UserList;
 
 import javax.swing.*;
 import java.awt.*;
@@ -23,7 +24,7 @@ public class GUI extends JFrame {
 	public GUI(Client client) {
 		do {
 			userName = JOptionPane.showInputDialog("Enter your user name");
-		} while (userName == null);
+		} while (userName == null || userName.isEmpty());
 		this.client = client;
 		initializeGUI();
 	}
@@ -119,6 +120,15 @@ public class GUI extends JFrame {
 	public void clearMessageField() {
 		SwingUtilities.invokeLater(() -> {
 			messageField.setText("");
+		});
+	}
+
+	public void updateUserList(UserList users) {
+		SwingUtilities.invokeLater(() -> {
+			listModel.removeAllElements();
+			for (User user : users.getUsers()) {
+				listModel.addElement(user.getUsername());
+			}
 		});
 	}
 

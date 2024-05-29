@@ -2,6 +2,7 @@ package TCP.Server;
 
 import util.Message;
 import util.User;
+import util.UserList;
 
 import java.io.*;
 import java.net.Socket;
@@ -13,7 +14,8 @@ public class ClientHandler implements Runnable {
 	to the server.
 	 */
 	public static final ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
-	public static final ArrayList<User> users = new ArrayList<User>();
+//	public static final ArrayList<User> users = new ArrayList<User>();
+	public static final UserList users = new UserList();
 	private Socket socket;
 	private ObjectInputStream input;
 	private ObjectOutputStream output;
@@ -70,7 +72,7 @@ public class ClientHandler implements Runnable {
 
 	private void registerNewClient(User newUser) {
 		this.user = newUser;
-		users.add(newUser);
+		users.addUser(newUser);
 		Message joinMessage = new Message(
 				user.getUsername(),
 				"SERVER: " + user.getUsername() + " joined the server.");
@@ -91,13 +93,9 @@ public class ClientHandler implements Runnable {
 	private void sendListToClients() {
 		for (ClientHandler client : clients) {
 			try {
-				if (users.size() > 1) {
-					users.addFirst(new User());
-				}
-				for (var user : users) {
-					client.output.writeObject(user);
-					client.output.flush();
-				}
+				client.output.reset();
+				client.output.writeObject(users);
+				client.output.flush();
 			} catch (IOException e) {
 				close();
 				throw new RuntimeException(e);
@@ -126,7 +124,7 @@ public class ClientHandler implements Runnable {
 			Message leaveMessage = new Message(user.getUsername(),
 					"SERVER: " + user.getUsername() + " left the server.");
 			sendMessageToClients(leaveMessage);
-			users.remove(user);
+			users.removeUser(user);
 		}
 		clients.remove(this);
 		sendListToClients();

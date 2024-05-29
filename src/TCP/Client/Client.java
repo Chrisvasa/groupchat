@@ -2,13 +2,15 @@ package TCP.Client;
 
 import util.Message;
 import util.User;
+import util.UserList;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class Client {
 	private Socket socket;
-	//	private static final String IP = "127.0.0.1";
+	private static final String IP = "192.168.0.178";
 	private final int PORT = 1337;
 	private String userName;
 	private ObjectInputStream objInput;
@@ -44,7 +46,7 @@ public class Client {
 					Object obj = objInput.readObject();
 					switch (obj) {
 						case Message message -> gui.addMessage(message.getMessage());
-//						case UserList userList -> gui.updateUserList(userList);
+						case UserList userList -> gui.updateUserList(userList);
 						case User newUser -> gui.addUser(newUser);
 						case String string -> gui.addMessage(string);
 						case null, default -> System.out.println("Unknown Message Type");
